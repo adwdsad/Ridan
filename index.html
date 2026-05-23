@@ -1,0 +1,639 @@
+html
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Зельеварение: Алхимическая Лаборатория</title>
+    <style>
+        * {
+            user-select: none;
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: radial-gradient(circle at 20% 30%, #2e241f, #0f0c08);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', 'MedievalSharp', 'Courier New', monospace;
+            padding: 20px;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap');
+
+        .game-board {
+            max-width: 1200px;
+            width: 100%;
+            background: #2f261ee6;
+            backdrop-filter: blur(3px);
+            border-radius: 3rem;
+            padding: 1.5rem;
+            box-shadow: 0 20px 35px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,215,140,0.3);
+            border: 2px solid #b97f3a;
+        }
+
+        .top-panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #1f1912cc;
+            border-radius: 3rem;
+            padding: 0.5rem 1.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 15px;
+            border-bottom: 2px solid #c29a6b;
+        }
+
+        .gold {
+            font-size: 1.8rem;
+            font-weight: bold;
+            background: #00000066;
+            padding: 0.2rem 1.2rem;
+            border-radius: 2rem;
+            color: #ffd966;
+            text-shadow: 0 2px 3px black;
+            font-family: monospace;
+        }
+
+        .order-card {
+            background: #3a2c1f;
+            padding: 0.4rem 1.2rem;
+            border-radius: 2rem;
+            border-left: 8px solid #e6b050;
+            font-weight: bold;
+            color: #ffefc0;
+            text-align: center;
+        }
+
+        .order-card span {
+            color: #ffbf69;
+            font-size: 1.2rem;
+        }
+
+        .message-area {
+            background: #000000aa;
+            padding: 0.3rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.9rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .flex-main {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.8rem;
+            justify-content: center;
+        }
+
+        /* Котёл и визуалы */
+        .cauldron-section {
+            flex: 2;
+            min-width: 280px;
+            background: #261f17;
+            border-radius: 2rem;
+            padding: 1rem;
+            box-shadow: inset 0 0 0 2px #9b6e42, 0 10px 20px black;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            background: #1f1912;
+            border-radius: 2rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 5px 15px black;
+            cursor: pointer;
+        }
+
+        .ingredients-list {
+            background: #1e1812d9;
+            border-radius: 1.5rem;
+            padding: 0.7rem;
+            margin-top: 0.8rem;
+        }
+
+        .ingredients-title {
+            font-size: 0.8rem;
+            color: #ecca8c;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .added-badge {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            margin: 10px 0;
+        }
+
+        .ingredient-pill {
+            background: #4a3824;
+            border-radius: 2rem;
+            padding: 4px 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #ffe3b3;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: inset 0 1px 0 #7a5a3a, 0 1px 2px black;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 12px;
+        }
+
+        button {
+            background: #5c432b;
+            border: none;
+            font-family: 'MedievalSharp', monospace;
+            font-weight: bold;
+            font-size: 1.1rem;
+            padding: 6px 18px;
+            border-radius: 3rem;
+            color: #ffefcf;
+            cursor: pointer;
+            transition: 0.1s linear;
+            box-shadow: 0 3px 0 #2c1f12;
+        }
+
+        button:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 #2c1f12;
+        }
+
+        .ingredients-panel {
+            flex: 1.3;
+            min-width: 260px;
+            background: #2c241cee;
+            border-radius: 2rem;
+            padding: 1rem;
+            backdrop-filter: blur(2px);
+            border: 1px solid #b4813c;
+        }
+
+        .ingredient-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .ingredient-card {
+            background: #3b2c1f;
+            border-radius: 1.2rem;
+            padding: 8px 5px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.05s linear;
+            border-bottom: 3px solid #c99758;
+            color: #f7e3bf;
+            font-weight: bold;
+        }
+
+        .ingredient-card:active {
+            transform: scale(0.96);
+        }
+
+        .ingredient-emoji {
+            font-size: 2rem;
+            display: block;
+        }
+
+        .recipe-hint {
+            font-size: 0.8rem;
+            background: #00000066;
+            border-radius: 1rem;
+            padding: 8px;
+            text-align: center;
+            margin-top: 12px;
+        }
+
+        .status {
+            font-weight: bold;
+            color: #ecd68a;
+        }
+
+        @keyframes bubblePop {
+            0% { transform: scale(1); opacity: 0.9; }
+            100% { transform: scale(1.3); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+<div class="game-board">
+    <div class="top-panel">
+        <div class="gold">🪙 ЗОЛОТО: <span id="goldAmount">50</span></div>
+        <div class="order-card">🧪 ЗАКАЗ: <span id="potionName">Эликсир исцеления</span><br>⚗️ <span id="requiredList">Драконий цветок + Лунный гриб</span></div>
+        <div class="message-area" id="gameStatusMsg">✨ Добавляй ингредиенты и вари! ✨</div>
+    </div>
+
+    <div class="flex-main">
+        <!-- Левая часть: Котёл -->
+        <div class="cauldron-section">
+            <canvas id="cauldronCanvas" width="450" height="300" style="width:100%; height:auto; max-width:450px; margin:0 auto; display:block"></canvas>
+            <div class="ingredients-list">
+                <div class="ingredients-title">⚡ СОДЕРЖИМОЕ КОТЛА ⚡</div>
+                <div id="cauldronIngredients" class="added-badge">
+                    <span class="ingredient-pill">🧪 Пусто</span>
+                </div>
+                <div class="btn-group">
+                    <button id="brewBtn">🍵 СВАРИТЬ ЗЕЛЬЕ</button>
+                    <button id="clearBtn">🧹 ОЧИСТИТЬ КОТЁЛ</button>
+                    <button id="removeLastBtn">↩️ УБРАТЬ ПОСЛЕДНИЙ</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Правая панель: ингредиенты -->
+        <div class="ingredients-panel">
+            <div style="text-align:center; font-size:1.4rem;">🌿 ИНГРЕДИЕНТЫ 🌿</div>
+            <div id="ingredientsGrid" class="ingredient-grid"></div>
+            <div class="recipe-hint">
+                📜 <em>Совет алхимика:</em> точное соответствие рецепту приносит награду!<br>
+                Смешивай нужные компоненты и нажимай "Сварить зелье".
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // ------ БАЗА ДАННЫХ ИНГРЕДИЕНТОВ ------
+        const INGREDIENTS = [
+            { id: "dragon_flower", name: "Драконий цветок", emoji: "🐉🌺", color: "#dd4b3e", rgb: {r:221, g:75, b:62} },
+            { id: "moon_shroom", name: "Лунный гриб", emoji: "🌙🍄", color: "#b89eff", rgb: {r:184, g:158, b:255} },
+            { id: "frost_fern", name: "Ледяной папоротник", emoji: "❄️🌿", color: "#7ac4e0", rgb: {r:122, g:196, b:224} },
+            { id: "phoenix_feather", name: "Перо феникса", emoji: "🔥🪶", color: "#ff8640", rgb: {r:255, g:134, b:64} },
+            { id: "nightshade", name: "Ягодник ночи", emoji: "🌙🍇", color: "#6b3f98", rgb: {r:107, g:63, b:152} },
+            { id: "golden_honey", name: "Золотой мёд", emoji: "🍯✨", color: "#e0a82b", rgb: {r:224, g:168, b:43} }
+        ];
+
+        // ------ РЕЦЕПТЫ (зелья) ------
+        const RECIPES = [
+            { name: "🧪 Эликсир исцеления", ingredients: ["dragon_flower", "moon_shroom"], goldReward: 18, desc: "Драконий цветок + Лунный гриб" },
+            { name: "⚡ Зелье магии", ingredients: ["frost_fern", "nightshade"], goldReward: 20, desc: "Ледяной папоротник + Ягодник ночи" },
+            { name: "🔥 Огнестойкое варево", ingredients: ["dragon_flower", "frost_fern"], goldReward: 22, desc: "Драконий цветок + Ледяной папоротник" },
+            { name: "🕯️ Зелье невидимости", ingredients: ["phoenix_feather", "moon_shroom"], goldReward: 25, desc: "Перо феникса + Лунный гриб" },
+            { name: "🍯 Эликсир мудрости", ingredients: ["golden_honey", "nightshade"], goldReward: 20, desc: "Золотой мёд + Ягодник ночи" },
+            { name: "🌈 Радужный тоник", ingredients: ["golden_honey", "phoenix_feather"], goldReward: 24, desc: "Золотой мёд + Перо феникса" }
+        ];
+
+        // ------ ИГРОВОЕ СОСТОЯНИЕ ------
+        let gold = 50;
+        let currentOrder = null;           // текущий заказ (объект рецепта)
+        let cauldronContents = [];          // массив id ингредиентов в котле
+        let gameActive = true;
+
+        // Canvas & анимация
+        const canvas = document.getElementById('cauldronCanvas');
+        const ctx = canvas.getContext('2d');
+        let bubbles = [];
+        let animationId = null;
+        let successFlash = 0;   // счетчик для вспышки успеха
+
+        // DOM элементы
+        const goldSpan = document.getElementById('goldAmount');
+        const potionNameSpan = document.getElementById('potionName');
+        const requiredListSpan = document.getElementById('requiredList');
+        const gameStatusMsg = document.getElementById('gameStatusMsg');
+        const cauldronIngredientsDiv = document.getElementById('cauldronIngredients');
+        const ingredientsGrid = document.getElementById('ingredientsGrid');
+
+        // ------ Вспомогательные функции ------
+        function updateUI() {
+            goldSpan.innerText = gold;
+            if (currentOrder) {
+                potionNameSpan.innerText = currentOrder.name;
+                requiredListSpan.innerText = currentOrder.desc;
+            }
+            // Отображаем содержимое котла
+            if (cauldronContents.length === 0) {
+                cauldronIngredientsDiv.innerHTML = '<span class="ingredient-pill">🧪 Пусто</span>';
+            } else {
+                let html = '';
+                cauldronContents.forEach(id => {
+                    const ing = INGREDIENTS.find(i => i.id === id);
+                    if (ing) html += `<span class="ingredient-pill">${ing.emoji} ${ing.name}</span>`;
+                    else html += `<span class="ingredient-pill">❓ Неизвестно</span>`;
+                });
+                cauldronIngredientsDiv.innerHTML = html;
+            }
+        }
+
+        // Отображение сообщения с эффектом
+        function setMessage(msg, isError = false) {
+            gameStatusMsg.innerHTML = msg;
+            gameStatusMsg.style.color = isError ? "#ffaa88" : "#d4f1b0";
+            setTimeout(() => {
+                if (gameStatusMsg.innerHTML === msg) {
+                    gameStatusMsg.style.color = "#ffefc0";
+                    if(!gameActive) return;
+                    gameStatusMsg.innerHTML = "⚗️ Кипит алхимия... добавь ингредиенты!";
+                }
+            }, 1800);
+        }
+
+        // Генерация случайного заказа (исключая текущий, если возможно)
+        function pickRandomOrder() {
+            let available = [...RECIPES];
+            if (currentOrder) {
+                available = RECIPES.filter(r => r.name !== currentOrder.name);
+            }
+            if (available.length === 0) available = [...RECIPES];
+            const randomIndex = Math.floor(Math.random() * available.length);
+            return available[randomIndex];
+        }
+
+        // Сброс заказа (новый заказ после успеха)
+        function setNewOrder() {
+            currentOrder = pickRandomOrder();
+            updateUI();
+        }
+
+        // Проверка рецепта (сравнение мультимножеств)
+        function checkRecipeMatch() {
+            if (!currentOrder) return false;
+            const required = [...currentOrder.ingredients].sort();
+            const current = [...cauldronContents].sort();
+            if (required.length !== current.length) return false;
+            for (let i = 0; i < required.length; i++) {
+                if (required[i] !== current[i]) return false;
+            }
+            return true;
+        }
+
+        // Успешная варка
+        function successBrew() {
+            const reward = currentOrder.goldReward;
+            gold += reward;
+            updateUI();
+            setMessage(`🎉 УСПЕХ! Вы сварили ${currentOrder.name} и получили ${reward} золота! 🎉`);
+            // Визуальный эффект на канвасе
+            successFlash = 12;
+            // Очистить котёл, новый заказ
+            cauldronContents = [];
+            setNewOrder();
+            updateUI();
+            updateCauldronColor();
+        }
+
+        // Провал варки (штраф и очистка)
+        function failBrew() {
+            const penalty = 5;
+            gold = Math.max(0, gold - penalty);
+            updateUI();
+            setMessage(`💥 КОТЁЛ ВЗОРВАЛСЯ! Рецепт неверный. Потеряно ${penalty} золота. 💥`, true);
+            // Очистить содержимое котла
+            cauldronContents = [];
+            updateUI();
+            updateCauldronColor();
+            // заказ остаётся тем же
+        }
+
+        // Обработка "Сварить"
+        function brewPotion() {
+            if (!gameActive) return;
+            if (cauldronContents.length === 0) {
+                setMessage("❓ Котёл пуст! Добавьте ингредиенты.", true);
+                return;
+            }
+            if (checkRecipeMatch()) {
+                successBrew();
+            } else {
+                failBrew();
+            }
+        }
+
+        // Добавить ингредиент
+        function addIngredient(ingId) {
+            if (!gameActive) return;
+            cauldronContents.push(ingId);
+            updateUI();
+            updateCauldronColor();
+            setMessage(`📦 Добавлен: ${INGREDIENTS.find(i=>i.id===ingId)?.name}`, false);
+            // добавить пузырьковую анимацию
+            addBubblePop();
+        }
+
+        function removeLastIngredient() {
+            if (cauldronContents.length === 0) {
+                setMessage("Невозможно убрать – котёл пуст", true);
+                return;
+            }
+            const removed = cauldronContents.pop();
+            const ingName = INGREDIENTS.find(i=>i.id===removed)?.name;
+            setMessage(`🗑️ Убран ${ingName}`, false);
+            updateUI();
+            updateCauldronColor();
+        }
+
+        function clearCauldron() {
+            if (cauldronContents.length === 0) {
+                setMessage("Котёл уже чист", false);
+                return;
+            }
+            cauldronContents = [];
+            updateUI();
+            updateCauldronColor();
+            setMessage("🧽 Котёл очищен!", false);
+        }
+
+        // отрисовка котла и жидкости (цвет смешивается)
+        function updateCauldronColor() {
+            // ничего, перерисовка вызовется в анимации
+        }
+
+        // Получить цвет зелья: смешивание RGB ингредиентов
+        function getPotionColor() {
+            if (cauldronContents.length === 0) return {r: 62, g: 39, b: 35}; // тёмно-коричневый
+            let totalR = 0, totalG = 0, totalB = 0;
+            for (let id of cauldronContents) {
+                const ing = INGREDIENTS.find(i => i.id === id);
+                if (ing) {
+                    totalR += ing.rgb.r;
+                    totalG += ing.rgb.g;
+                    totalB += ing.rgb.b;
+                } else {
+                    totalR += 100; totalG += 70; totalB += 50;
+                }
+            }
+            const count = cauldronContents.length;
+            let r = Math.min(220, totalR / count);
+            let g = Math.min(200, totalG / count);
+            let b = Math.min(210, totalB / count);
+            // добавляем магического свечения
+            return { r: r, g: g, b: b };
+        }
+
+        // Анимация пузырьков
+        function initBubbles() {
+            bubbles = [];
+            for (let i = 0; i < 18; i++) {
+                bubbles.push({
+                    x: Math.random() * (canvas.width - 60) + 30,
+                    y: Math.random() * (canvas.height - 80) + 40,
+                    radius: 3 + Math.random() * 7,
+                    speed: 0.5 + Math.random() * 1.2,
+                    opacity: 0.5 + Math.random() * 0.4
+                });
+            }
+        }
+
+        function addBubblePop() {
+            for(let i=0;i<3;i++) {
+                bubbles.push({
+                    x: canvas.width/2 + (Math.random() - 0.5)*80,
+                    y: canvas.height - 45 + Math.random() * 30,
+                    radius: 2 + Math.random() * 6,
+                    speed: 0.8 + Math.random(),
+                    opacity: 0.8
+                });
+            }
+            while(bubbles.length > 45) bubbles.shift();
+        }
+
+        function drawCauldron() {
+            if (!ctx) return;
+            const w = canvas.width, h = canvas.height;
+            ctx.clearRect(0, 0, w, h);
+            
+            // металлический котел
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = "black";
+            // внешний край
+            ctx.fillStyle = "#4c3a2a";
+            ctx.beginPath();
+            ctx.ellipse(w/2, h-40, 130, 45, 0, 0, Math.PI*2);
+            ctx.fill();
+            ctx.fillStyle = "#6a4f32";
+            ctx.beginPath();
+            ctx.ellipse(w/2, h-55, 115, 38, 0, 0, Math.PI*2);
+            ctx.fill();
+            // жидкость
+            const color = getPotionColor();
+            ctx.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, 0.9)`;
+            ctx.beginPath();
+            ctx.ellipse(w/2, h-62, 108, 32, 0, 0, Math.PI*2);
+            ctx.fill();
+            // блики
+            ctx.fillStyle = `rgba(255,230,150,0.3)`;
+            ctx.beginPath();
+            ctx.ellipse(w/2-25, h-70, 20, 12, 0, 0, Math.PI*2);
+            ctx.fill();
+            // ручки котла
+            ctx.strokeStyle = "#a57447";
+            ctx.lineWidth = 8;
+            ctx.beginPath();
+            ctx.arc(w/2-110, h-50, 20, 0.2, Math.PI*1.8);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(w/2+110, h-50, 20, -0.2, Math.PI*1.2);
+            ctx.stroke();
+            
+            // пузырьки
+            for (let b of bubbles) {
+                ctx.beginPath();
+                ctx.arc(b.x, b.y, b.radius, 0, Math.PI*2);
+                ctx.fillStyle = `rgba(255, 245, 190, ${b.opacity * 0.7})`;
+                ctx.fill();
+                ctx.strokeStyle = `rgba(255,200,100,0.5)`;
+                ctx.stroke();
+                // движение вверх
+                b.y -= b.speed;
+                if (b.y < 20 || b.y > h-50) {
+                    b.y = h - 55 + Math.random() * 20;
+                    b.x = w/2 + (Math.random() - 0.5) * 130;
+                }
+            }
+            
+            // эффект успеха (вспышка)
+            if (successFlash > 0) {
+                ctx.fillStyle = `rgba(255, 215, 80, ${successFlash / 15})`;
+                ctx.fillRect(0, 0, w, h);
+                successFlash--;
+            }
+            
+            // пар
+            ctx.fillStyle = `rgba(220,210,190,0.2)`;
+            for (let i=0; i<4; i++) {
+                ctx.beginPath();
+                ctx.ellipse(w/2 - 20 + i*12, h-85, 12, 7, 0, 0, Math.PI*2);
+                ctx.fill();
+            }
+            ctx.shadowBlur = 0;
+        }
+        
+        function animateCanvas() {
+            drawCauldron();
+            requestAnimationFrame(animateCanvas);
+        }
+
+        // Создание кнопок ингредиентов
+        function buildIngredientsUI() {
+            ingredientsGrid.innerHTML = '';
+            INGREDIENTS.forEach(ing => {
+                const card = document.createElement('div');
+                card.className = 'ingredient-card';
+                card.innerHTML = `<span class="ingredient-emoji">${ing.emoji}</span><span>${ing.name}</span>`;
+                card.addEventListener('click', () => addIngredient(ing.id));
+                ingredientsGrid.appendChild(card);
+            });
+        }
+
+        // Инициализация новой игры / сброс (не полный сброс золота, но если нужно)
+        function initGame() {
+            gold = 50;
+            cauldronContents = [];
+            currentOrder = RECIPES[0]; // стартовый рецепт
+            updateUI();
+            setMessage("✨ Добро пожаловать в лабораторию! Смешивай зелья по рецепту. ✨");
+            updateCauldronColor();
+            gameActive = true;
+            successFlash = 0;
+        }
+
+        // Сброс (пользовательский)
+        function fullReset() {
+            initGame();
+            setNewOrder(); // случайный заказ
+            cauldronContents = [];
+            updateUI();
+            setMessage("🔮 Игра перезапущена! Варите зелья с умом!", false);
+        }
+
+        // ----- СОБЫТИЯ И ЗАПУСК ------
+        function bindEvents() {
+            document.getElementById('brewBtn').addEventListener('click', brewPotion);
+            document.getElementById('clearBtn').addEventListener('click', clearCauldron);
+            document.getElementById('removeLastBtn').addEventListener('click', removeLastIngredient);
+            // Скрытый рестарт по R (для удобства)
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'r' || e.key === 'R') {
+                    e.preventDefault();
+                    fullReset();
+                }
+            });
+        }
+
+        // Запуск игры
+        initGame();
+        buildIngredientsUI();
+        bindEvents();
+        initBubbles();
+        setNewOrder();   // случайный заказ
+        updateUI();
+        animateCanvas();
+    })();
+</script>
+</body>
+</html>
